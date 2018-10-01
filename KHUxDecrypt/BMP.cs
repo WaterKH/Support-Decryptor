@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SupportDecrypt
+namespace KHUxDecrypt
 {
     class BMP
     {
@@ -23,7 +23,7 @@ namespace SupportDecrypt
         public static int VerticalResolution = 0;
         public static int ColorPalette = 0;
         public static int ImportantColor = 0;
-
+        
         public static byte[] Template(int width, int height)
         {
             //var bytes = new byte[StartAddress - 1];
@@ -46,6 +46,13 @@ namespace SupportDecrypt
             bytes.AddRange(BitConverter.GetBytes(ImportantColor));
 
             return bytes.ToArray();
+        }
+
+        public static decimal GetRowSize(int width)
+        {
+            decimal rowSize = Math.Floor((decimal)(BitsPerPixel * width + 31) / 32) * 4;
+
+            return rowSize;
         }
     }
 }

@@ -1,0 +1,10 @@
+C:\Users\Jacob.Clark\source\repos\KHUxDecrypt\KHUxDecrypt\bin\Debug\KHUxDecrypt.exe.config
+C:\Users\Jacob.Clark\source\repos\KHUxDecrypt\KHUxDecrypt\bin\Debug\KHUxDecrypt.exe
+C:\Users\Jacob.Clark\source\repos\KHUxDecrypt\KHUxDecrypt\bin\Debug\KHUxDecrypt.pdb
+C:\Users\Jacob.Clark\source\repos\KHUxDecrypt\KHUxDecrypt\bin\Debug\DotNetZip.dll
+C:\Users\Jacob.Clark\source\repos\KHUxDecrypt\KHUxDecrypt\bin\Debug\DotNetZip.xml
+C:\Users\Jacob.Clark\source\repos\KHUxDecrypt\KHUxDecrypt\obj\Debug\KHUxDecrypt.csproj.CoreCompileInputs.cache
+C:\Users\Jacob.Clark\source\repos\KHUxDecrypt\KHUxDecrypt\obj\Debug\KHUxDecrypt.csproj.CopyComplete
+C:\Users\Jacob.Clark\source\repos\KHUxDecrypt\KHUxDecrypt\obj\Debug\KHUxDecrypt.exe
+C:\Users\Jacob.Clark\source\repos\KHUxDecrypt\KHUxDecrypt\obj\Debug\KHUxDecrypt.pdb
+C:\Users\Jacob.Clark\source\repos\KHUxDecrypt\KHUxDecrypt\obj\Debug\KHUxDecrypt.csprojAssemblyReference.cache

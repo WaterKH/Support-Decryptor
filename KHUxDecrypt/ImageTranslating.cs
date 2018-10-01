@@ -2,16 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace SupportDecrypt
+namespace KHUxDecrypt
 {
     class ImageTranslating
     {
-        public void TranslateImage(string file)
+        public byte[] TranslateImage(byte[] data)
         {
-            using (var reader = new BinaryReader(new FileStream(file, FileMode.Open)))
+            using (var reader = new BinaryReader(new MemoryStream(data)))
             {
                 var BTF = new BTF()
                 {
@@ -26,42 +24,44 @@ namespace SupportDecrypt
                     Height = reader.ReadBytes(2),
                     DataSize = Utilities.ByteToInt(reader.ReadBytes(4))
                 };
-
                 
                 BTF.Data = reader.ReadBytes(BTF.DataSize);
-                
-                BTF.Data = Utilities.DecompressBytes(BTF.Data, 0);
-                
-                byte[] colorChunk = new byte[4];
-                byte[] reversedData = BTF.Data;
-                var runningData = new List<byte>();
 
-                // Initially reverse it to get the flipped image
-                reversedData.Reverse();
-
-                for (int i = 0; i < reversedData.Length; i += 4)
+                try
                 {
-                    // Assume 32 bit?
-                    colorChunk = reversedData.ToList().GetRange(i, 4).ToArray();
-                    
-                    // Change the red and blue channels here
-                    var t = colorChunk[0];
-                    colorChunk[0] = colorChunk[2];
-                    colorChunk[2] = t;
+                    BTF.Data = Utilities.DecompressBytes(BTF.Data, 0);
 
-                    // Add to our data, but reverse it so that when we reverse the entire thing again, we'll be in the correct color channels as well as right ways up
-                    runningData.AddRange(colorChunk.Reverse());
-            
+                    var rowSize = (int) BMP.GetRowSize(Utilities.ByteToInt(BTF.Width));
+                    var pixelArraySize = rowSize * Math.Abs(Utilities.ByteToInt(BTF.Height));
+
+                    byte[] colorChunk = new byte[4];
+                    var imageData = new List<byte>();
+
+                    for (int i = (BTF.Data.Length - 1) - rowSize; i >= 0; i -= rowSize)
+                    {
+                        var temp = BTF.Data.ToList().GetRange(i, rowSize);
+
+                        for (int j = 0; j < temp.Count; j += 4)
+                        {
+                            imageData.AddRange(new byte[] {temp[j + 2], temp[j + 1], temp[j], temp[j + 3]});
+                        }
+                    }
+
+                    var returnImageBMP = BMP.Template(Utilities.ByteToInt(BTF.Width), Utilities.ByteToInt(BTF.Height))
+                        .ToList();
+                    returnImageBMP.AddRange(imageData);
+
+                    return returnImageBMP.ToArray();
                 }
-
-                // Final flip
-                runningData.Reverse();
-                using (var stream = new FileStream("test.bmp", FileMode.OpenOrCreate))
+                catch (Exception e)
                 {
-                    var bmpTemplate = BMP.Template((int)BitConverter.ToInt16(BTF.Width, 0), (int)BitConverter.ToInt16(BTF.Height, 0));
+                    Console.WriteLine("Warning: No Compression used here... For future use. Probably not BMP Format.");
 
-                    stream.Write(bmpTemplate, 0, bmpTemplate.Length);
-                    stream.Write(runningData.ToArray(), 0, runningData.Count);
+                    var returnImageBMP = BMP.Template(Utilities.ByteToInt(BTF.Width), Utilities.ByteToInt(BTF.Height))
+                        .ToList();
+                    returnImageBMP.AddRange(BTF.Data);
+
+                    return returnImageBMP.ToArray();
                 }
             }
         }

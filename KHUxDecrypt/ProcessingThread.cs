@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SupportDecrypt
+namespace KHUxDecrypt
 {
     // Courtesy of Oxin8
     public class ProcessingThread<T> : IDisposable

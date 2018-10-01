@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Ionic.Zlib;
 
-namespace SupportDecrypt
+namespace KHUxDecrypt
 {
     class Utilities
     {
@@ -65,8 +65,6 @@ namespace SupportDecrypt
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-
                 decompressedBytes = bytesToDecompress;
             }
 
@@ -126,6 +124,72 @@ namespace SupportDecrypt
         {
             if (char.IsDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
                 return true;
+
+            return false;
+        }
+
+        //https://stackoverflow.com/questions/5613279/c-sharp-hex-to-ascii
+        public static string HandleLWF(string fullName)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            var fileName = Path.GetFileName(fullName);
+            var path = Path.GetDirectoryName(fullName);
+
+            var splitFileName = fileName.Split('_');
+
+            if (splitFileName.Length == 1)
+                return fullName;
+
+            var hexString = splitFileName[splitFileName.Length - 1];
+            hexString = hexString.Remove(hexString.Length - 4);
+
+            if (hexString.Length <= 4 || hexString.Length % 2 != 0)
+                return fullName;
+
+            sb.Append(path + "\\");
+
+            for (int i = 0; i < splitFileName.Length - 1; ++i)
+            {
+                sb.Append(splitFileName[i] + "_");
+            }
+
+            for (int i = 0; i < hexString.Length; i += 2)
+            {
+                if (i + 1 < hexString.Length)
+                {
+                    string hs = hexString.Substring(i, 2);
+                    if (Utilities.IsHexDigit(hs[0]) && Utilities.IsHexDigit(hs[1]))
+                    {
+                        sb.Append(Convert.ToChar(Convert.ToUInt32(hs, 16)));
+                    }
+                    else
+                    {
+                        return fullName;
+                    }
+                }
+                else
+                {
+                    sb.Append(hexString.Substring(i));
+                }
+            }
+
+            sb.Append(fileName.Substring(fileName.Length - 4));
+
+            return sb.ToString();
+        }
+
+        public static bool SignatureMatch(byte[] data)
+        {
+            if (data.Length < 4)
+                return false;
+
+            var temp = data.ToList().GetRange(0, 4);
+
+            if (temp[0] == 0x89 && temp[1] == 0x42 && temp[2] == 0x54 && temp[3] == 0x46)
+            {
+                return true;
+            }
 
             return false;
         }
