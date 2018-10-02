@@ -15,6 +15,9 @@ namespace KHUxDecrypt
             byte[] decompressedBytes = new byte[decompressedSize];
 
             var compressionLevel = CompressionLevel.Default;
+            if (bytesToDecompress.Length < 2)
+                return bytesToDecompress;
+
             if (bytesToDecompress[0] == 0x78)
             {
                 if (bytesToDecompress[1] == 0x01)
@@ -42,6 +45,11 @@ namespace KHUxDecrypt
                     compressionLevel = CompressionLevel.Level9;
                 }
             }
+            else
+            {
+                return bytesToDecompress; // We aren't compressed
+            }
+
             try
             {
                 using (var stream = new MemoryStream(bytesToDecompress))
@@ -67,7 +75,7 @@ namespace KHUxDecrypt
             {
                 decompressedBytes = bytesToDecompress;
             }
-
+            
             return decompressedBytes;
         }
 

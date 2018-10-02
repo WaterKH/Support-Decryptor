@@ -15,9 +15,7 @@ namespace KHUxDecrypt
             string output = "KHUx";
             //string file = args[0];
             //string output = args[1];
-            var bgadChunks = new List<BGAD>();
             var bgadDecompiler = new KHUxDecompile();
-            ImageTranslating imageTranslator = new ImageTranslating();
             
             bgadDecompiler.Decompile(file, output);
             

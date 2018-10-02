@@ -9,7 +9,8 @@ namespace KHUxDecrypt
     {
         public byte[] TranslateImage(byte[] data)
         {
-            using (var reader = new BinaryReader(new MemoryStream(data)))
+            using(var stream = new MemoryStream(data))
+            using (var reader = new BinaryReader(stream))
             {
                 var BTF = new BTF()
                 {
@@ -22,46 +23,57 @@ namespace KHUxDecrypt
                     Unk5 = Utilities.ByteToInt(reader.ReadBytes(4)),
                     Width = reader.ReadBytes(2),
                     Height = reader.ReadBytes(2),
-                    DataSize = Utilities.ByteToInt(reader.ReadBytes(4))
+                    //DataSize = Utilities.ByteToInt(reader.ReadBytes(4))
                 };
-                
-                BTF.Data = reader.ReadBytes(BTF.DataSize);
+                Console.WriteLine(BTF.HeaderSize);
+                if (BTF.HeaderSize != 8)
+                {
+                    var Unk6 = reader.ReadBytes(2);
+                }
+
+                BTF.DataSize = Utilities.ByteToInt(reader.ReadBytes(4));
+
+                var returnImageBMP = BMP.Template(Utilities.ByteToInt(BTF.Width), Utilities.ByteToInt(BTF.Height))
+                    .ToList();
+                var rowSize = (int)BMP.GetRowSize(Utilities.ByteToInt(BTF.Width));
+                var pixelArraySize = rowSize * Math.Abs(Utilities.ByteToInt(BTF.Height));
+
+                if (BTF.DataSize < 0)
+                    BTF.Data = reader.ReadBytes(pixelArraySize * 8);
+                else
+                    BTF.Data = reader.ReadBytes(BTF.DataSize);
+
+                BTF.Data = Utilities.DecompressBytes(BTF.Data, 0);
+
+                if (rowSize == 0)
+                    return data;
 
                 try
                 {
-                    BTF.Data = Utilities.DecompressBytes(BTF.Data, 0);
-
-                    var rowSize = (int) BMP.GetRowSize(Utilities.ByteToInt(BTF.Width));
-                    var pixelArraySize = rowSize * Math.Abs(Utilities.ByteToInt(BTF.Height));
-
-                    byte[] colorChunk = new byte[4];
-                    var imageData = new List<byte>();
-
-                    for (int i = (BTF.Data.Length - 1) - rowSize; i >= 0; i -= rowSize)
+                    for (int i = BTF.Data.Length - rowSize; i >= 0; i -= rowSize)
                     {
-                        var temp = BTF.Data.ToList().GetRange(i, rowSize);
+                        var tempData = BTF.Data.ToList().GetRange(i, rowSize);
 
-                        for (int j = 0; j < temp.Count; j += 4)
-                        {
-                            imageData.AddRange(new byte[] {temp[j + 2], temp[j + 1], temp[j], temp[j + 3]});
-                        }
+                        var imageData = new List<byte>();
+
+                        //for (int j = tempData.Length - rowSize; j >= 0; j -= rowSize)
+                        //{
+                        //    var temp = BTF.Data.ToList().GetRange(j, rowSize);
+                            for (int k = 0; k < tempData.Count; k += 4)
+                            {
+                                imageData.AddRange(new byte[] {tempData[k + 2], tempData[k + 1], tempData[k], tempData[k + 3] });
+                            }
+                        //}
+                        returnImageBMP.AddRange(imageData);
                     }
-
-                    var returnImageBMP = BMP.Template(Utilities.ByteToInt(BTF.Width), Utilities.ByteToInt(BTF.Height))
-                        .ToList();
-                    returnImageBMP.AddRange(imageData);
-
                     return returnImageBMP.ToArray();
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Warning: No Compression used here... For future use. Probably not BMP Format.");
+                    throw;
+                    //returnImageBMP.AddRange(BTF.Data);
 
-                    var returnImageBMP = BMP.Template(Utilities.ByteToInt(BTF.Width), Utilities.ByteToInt(BTF.Height))
-                        .ToList();
-                    returnImageBMP.AddRange(BTF.Data);
-
-                    return returnImageBMP.ToArray();
+                    //return returnImageBMP.ToArray();
                 }
             }
         }
