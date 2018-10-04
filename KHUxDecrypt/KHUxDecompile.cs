@@ -55,13 +55,19 @@ namespace KHUxDecrypt
                             khuxDecrypt.Decrypt(bgad.Name, bgad.Header.NameSize, bgad.Header.DataSize);
                         
                         bgad.Data = reader.ReadBytes(bgad.Header.DataSize);
+
+                        if (File.Exists(output + "\\" + Encoding.ASCII.GetString(decryptedName)))
+                            continue;
+
                         var decryptedData =
                             khuxDecrypt.Decrypt(bgad.Data, bgad.Header.DataSize, bgad.Header.NameSize);
 
-                        if(!Encoding.ASCII.GetString(decryptedName).Contains("audio"))
-                        if (bgad.Header.IsCompressed != 0)
+                        if (!Encoding.ASCII.GetString(decryptedName).Contains("audio"))
                         {
-                            decryptedData = Utilities.DecompressBytes(decryptedData, bgad.Header.DecompressedSize);
+                            if (bgad.Header.IsCompressed != 0)
+                            {
+                                decryptedData = Utilities.DecompressBytes(decryptedData, bgad.Header.DecompressedSize);
+                            }
                         }
 
                         var khFile = new KHUxFile()
@@ -72,7 +78,6 @@ namespace KHUxDecrypt
                         };
 
                         WriteToFile(khFile, output);
-
                     }
                 }
             }
@@ -88,45 +93,78 @@ namespace KHUxDecrypt
                 {
                     fullName = Utilities.HandleLWF(fullName);
                 }
-                else if (fullName.Substring(fullName.Length - 4, 4).Equals(".png") || Utilities.SignatureMatch(file.Data))
-                {
-                    file.Data = imageTranslator.TranslateImage(file.Data).ToArray();
-                }
-
-                var path = Path.GetDirectoryName(fullName);
-                Directory.CreateDirectory(path);
                 
                 if (!File.Exists(fullName))
                 {
+                    if (fullName.Substring(fullName.Length - 4, 4).Equals(".png") || Utilities.SignatureMatch(file.Data))
+                    {
+                        file.Data = imageTranslator.TranslateImage(file.Data).ToArray();
+                    }
+                
+                    var path = Path.GetDirectoryName(fullName);
+                    Directory.CreateDirectory(path);
                     File.WriteAllBytes(fullName, file.Data);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine();
-                Console.WriteLine(e.Message);
-                //using (var writer = new StreamWriter("InvalidNames.txt", true))
-                //{
-                //    writer.WriteLine("Decrypted");
-                //    foreach (var f in x.FileName)
-                //    {
-                //        writer.Write(f + " ");
-                //    }
-                //    writer.WriteLine();
-                //    writer.WriteLine("Before Decryption");
-                //    foreach (var f in x.PreDecryptedFileName)
-                //    {
-                //        writer.Write(f + " ");
-                //    }
-                //    writer.WriteLine();
-                //}
+                //Console.WriteLine();
+                //Console.WriteLine(e.Message);
                 var path = output + "\\InvalidFileNames\\";
-                var fileToWrite = "File_" + imageCounter + ".txt";
+                var fileNameToWrite = "File_" + imageCounter + "Name.txt";
+
                 Directory.CreateDirectory(path);
 
-                if (!File.Exists(path + fileToWrite))
+                var fileName = new List<byte>();
+                fileName.AddRange(file.PreDecryptedFileName);
+                fileName.AddRange(new byte[] { 0x5c, 0x6e, 0x5c, 0x72, 0x5c, 0x6e, 0x5c, 0x72 });
+                fileName.AddRange(file.FileName);
+                fileName.AddRange(new byte[] { 0x5c, 0x6e, 0x5c, 0x72, 0x5c, 0x6e, 0x5c, 0x72});
+
+                var fileData = new List<byte>();
+                fileData.AddRange(file.Data);
+
+                if (!File.Exists(path + fileNameToWrite))
                 {
-                    File.WriteAllBytes(path + fileToWrite, file.Data);
+                    File.WriteAllBytes(path + fileNameToWrite, fileName.ToArray());
+                }
+
+                var fileDataToWrite = "File_" + imageCounter + "Data";
+
+                if (file.Data.Length > 8)
+                {
+                    if (Utilities.ByteArrayEquals(fileData.GetRange(0, 2).ToArray(), new byte[] {0x42, 0x4D}))
+                    {
+                        fileDataToWrite += ".png";
+                    }
+                    else if (Utilities.ByteArrayEquals(fileData.GetRange(0, 3).ToArray(),
+                        new byte[] {0x41, 0x4B, 0x42}))
+                    {
+                        fileDataToWrite += ".akb";
+                    }
+                    else if (Utilities.ByteArrayEquals(fileData.GetRange(0, 3).ToArray(),
+                        new byte[] {0x4C, 0x57, 0x46}))
+                    {
+                        fileDataToWrite += ".lwf";
+                    }
+                    else if (fileData[0] == 0x7B)
+                    {
+                        fileDataToWrite += ".json";
+                    }
+                    else if (Utilities.ByteArrayEquals(fileData.GetRange(0, 8).ToArray(),
+                        new byte[] { 0xEF, 0xBB, 0xBF, 0x3C, 0x3F, 0x78, 0x6D, 0x6C }))
+                    {
+                        fileDataToWrite += ".plist";
+                    }
+                    else
+                    {
+                        fileDataToWrite += ".txt";
+                    }
+                }
+
+                if (!File.Exists(path + fileDataToWrite))
+                {
+                    File.WriteAllBytes(path + fileDataToWrite, fileData.ToArray());
                 }
 
                 ++imageCounter;

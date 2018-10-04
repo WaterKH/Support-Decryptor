@@ -24,7 +24,7 @@ namespace KHUxDecrypt
         public static int ColorPalette = 0;
         public static int ImportantColor = 0;
         
-        public static byte[] Template(int width, int height)
+        public static byte[] Template(int width, int height, int horz, int vert)
         {
             //var bytes = new byte[StartAddress - 1];
 
@@ -40,8 +40,8 @@ namespace KHUxDecrypt
             bytes.AddRange(BitConverter.GetBytes(BitsPerPixel));
             bytes.AddRange(BitConverter.GetBytes(Compression));
             bytes.AddRange(BitConverter.GetBytes(ImageSize));
-            bytes.AddRange(BitConverter.GetBytes(HorizontalResolution));
-            bytes.AddRange(BitConverter.GetBytes(VerticalResolution));
+            bytes.AddRange(BitConverter.GetBytes(horz));
+            bytes.AddRange(BitConverter.GetBytes(vert));
             bytes.AddRange(BitConverter.GetBytes(ColorPalette));
             bytes.AddRange(BitConverter.GetBytes(ImportantColor));
 

@@ -99,7 +99,6 @@ namespace KHUxDecrypt
             {
                 if (b1[i] != b2[i])
                 {
-                    Console.WriteLine(b1[i] + " " + b2[i]);
                     return false;
                 }
             }

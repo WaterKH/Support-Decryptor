@@ -18,22 +18,28 @@ namespace KHUxDecrypt
                     Unk1 = reader.ReadBytes(12),
                     HeaderSize = Utilities.ByteToShort(reader.ReadBytes(2)),
                     Unk2 = Utilities.ByteToInt(reader.ReadBytes(4)),
-                    Unk3 = Utilities.ByteToShort(reader.ReadBytes(2)),
-                    Unk4 = Utilities.ByteToShort(reader.ReadBytes(2)),
+                    HorizontalRatio = reader.ReadBytes(2),
+                    VerticalRatio = reader.ReadBytes(2),
                     Unk5 = Utilities.ByteToInt(reader.ReadBytes(4)),
                     Width = reader.ReadBytes(2),
                     Height = reader.ReadBytes(2),
                     //DataSize = Utilities.ByteToInt(reader.ReadBytes(4))
                 };
-                Console.WriteLine(BTF.HeaderSize);
-                if (BTF.HeaderSize != 8)
+
+                if (BTF.HeaderSize == 9)
                 {
                     var Unk6 = reader.ReadBytes(2);
+                    BMP.BitsPerPixel = 0x04;
+                }
+                else
+                {
+                    BMP.BitsPerPixel = 0x20;
                 }
 
                 BTF.DataSize = Utilities.ByteToInt(reader.ReadBytes(4));
 
-                var returnImageBMP = BMP.Template(Utilities.ByteToInt(BTF.Width), Utilities.ByteToInt(BTF.Height))
+                var returnImageBMP = BMP.Template(Utilities.ByteToInt(BTF.Width), Utilities.ByteToInt(BTF.Height),
+                                                  Utilities.ByteToInt(BTF.HorizontalRatio), Utilities.ByteToInt(BTF.VerticalRatio))
                     .ToList();
                 var rowSize = (int)BMP.GetRowSize(Utilities.ByteToInt(BTF.Width));
                 var pixelArraySize = rowSize * Math.Abs(Utilities.ByteToInt(BTF.Height));
@@ -66,6 +72,7 @@ namespace KHUxDecrypt
                         //}
                         returnImageBMP.AddRange(imageData);
                     }
+
                     return returnImageBMP.ToArray();
                 }
                 catch (Exception e)
